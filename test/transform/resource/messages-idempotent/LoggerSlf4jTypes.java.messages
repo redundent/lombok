@@ -1,0 +1,5 @@
+1:1 ERROR @Log is legal only on classes and enums.
+4:1 ERROR @Log is legal only on classes and enums.
+7:1 WARNING Field 'log' already exists.
+12:1 WARNING Field 'log' already exists.
+18:9 WARNING Field 'log' already exists.
