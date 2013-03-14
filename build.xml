@@ -532,6 +532,5 @@ the common tasks and can be called on to run the main aspects of all the sub-scr
 		<ant antfile="${basedir}/../lombok-pg/build.xml" target="dist">
 			<property name="basedir" value="${basedir}/../lombok-pg" />
 		</ant>
-		<copy file="${basedir}/../lombok-pg/dist/lombok-pg-${lombok.version}.jar" todir="${basedir}/../web/external/repo/lombok-pg/lombok-pg/${lombok.version}" />
 	</target>
 </project>
