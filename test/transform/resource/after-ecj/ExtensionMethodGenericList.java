@@ -1,3 +1,4 @@
+import lombok.Extension;
 import lombok.ExtensionMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -6,7 +7,7 @@ import java.util.List;
     Objects() {
       super();
     }
-    public static <T>List<T> orElse(List<T> value, List<T> orElse) {
+    public static @Extension <T>List<T> orElse(List<T> value, List<T> orElse) {
       return ((value == null) ? orElse : value);
     }
   }

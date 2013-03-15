@@ -30,14 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import lombok.ExtensionMethod;
 import lombok.core.AST.Kind;
 import lombok.core.AnnotationValues;
 import lombok.core.AnnotationValues.AnnotationValueDecodeFail;
+import lombok.eclipse.Eclipse;
 import lombok.eclipse.EclipseAST;
 import lombok.eclipse.EclipseNode;
 import lombok.eclipse.TransformEclipseAST;
 import lombok.eclipse.handlers.EclipseHandlerUtil;
-import lombok.ExtensionMethod;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
@@ -50,6 +51,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -168,6 +170,16 @@ public class PatchExtensionMethod {
 			if (!method.isStatic()) continue;
 			if (!method.isPublic()) continue;
 			if (method.parameters == null || method.parameters.length == 0) continue;
+			if (method.sourceMethod().annotations == null) continue;
+			if (method.sourceMethod().annotations.length == 0) continue;
+			boolean found = false;
+			for (Annotation a : method.sourceMethod().annotations) {
+				if (a.resolvedType instanceof BinaryTypeBinding && Eclipse.nameEquals(((BinaryTypeBinding) a.resolvedType).compoundName, lombok.Extension.class.getName())) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) continue;
 			TypeBinding firstArgType = method.parameters[0];
 			if (receiverType.isProvablyDistinct(firstArgType) && !receiverType.isCompatibleWith(firstArgType.erasure())) continue;
 			TypeBinding[] argumentTypes = Arrays.copyOfRange(method.parameters, 1, method.parameters.length);

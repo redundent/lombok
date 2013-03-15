@@ -1,3 +1,5 @@
+import lombok.Extension;
+
 class ExtensionMethodPrimitives {
 
 	private void test(final byte b) {
@@ -5,6 +7,7 @@ class ExtensionMethodPrimitives {
 	}
 
 	static class Primitives {
+		@Extension
 		public static int toInt(final byte in) {
 			return in & 255;
 		}

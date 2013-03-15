@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import lombok.Extension;
 
 class ExtensionMethodPlain {
 	private static final String s = ExtensionMethodPlain.Strings.escapeToJavaRegex("f?ob*r");
@@ -9,16 +9,6 @@ class ExtensionMethodPlain {
 	
 	{
 		final String initializerVar = ExtensionMethodPlain.Strings.escapeToJavaRegex("f?ob*r");
-	}
-	
-	private void test1() {
-		new Runnable(){
-			@Override
-			public void run() {
-				long[] values = new long[]{2, 5, 7, 9};
-				java.util.Arrays.sort(java.util.Arrays.copyOf(values, 3));
-			}
-		};
 	}
 	
 	private boolean test2(String s) {
@@ -54,6 +44,7 @@ class ExtensionMethodPlain {
 	}
 	
 	static class Objects {
+		@Extension
 		public static boolean isOneOf(Object object, Object... possibleValues) {
 			if (possibleValues != null) for (Object possibleValue : possibleValues) {
 				if (object.equals(possibleValue)) return true;
@@ -63,10 +54,12 @@ class ExtensionMethodPlain {
 	}
 	
 	static class Strings {
+		@Extension
 		public static boolean matchesIgnoreCase(String s, String p) {
 			return false;
 		}
 		
+		@Extension
 		public static String escapeToJavaRegex(String s) {
 			return s;
 		}

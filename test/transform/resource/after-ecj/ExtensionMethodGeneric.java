@@ -1,10 +1,11 @@
+import lombok.Extension;
 import lombok.ExtensionMethod;
 @ExtensionMethod(ExtensionMethodGeneric.Objects.class) class ExtensionMethodGeneric {
   static class Objects {
     Objects() {
       super();
     }
-    public static <T>T orElse(T value, T orElse) {
+    public static @Extension <T>T orElse(T value, T orElse) {
       return ((value == null) ? orElse : value);
     }
   }

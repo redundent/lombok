@@ -1,10 +1,11 @@
+import lombok.Extension;
 import lombok.ExtensionMethod;
 @ExtensionMethod(ExtensionMethodGenericArray.Objects.class) class ExtensionMethodGenericArray {
   static class Objects {
     Objects() {
       super();
     }
-    public static <T>T[] orElse(T[] value, T[] orElse) {
+    public static @Extension <T>T[] orElse(T[] value, T[] orElse) {
       return ((value == null) ? orElse : value);
     }
   }

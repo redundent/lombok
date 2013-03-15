@@ -30,8 +30,8 @@ import java.util.List;
 
 import javax.lang.model.element.ElementKind;
 
-import lombok.core.AnnotationValues;
 import lombok.ExtensionMethod;
+import lombok.core.AnnotationValues;
 import lombok.javac.JavacAnnotationHandler;
 import lombok.javac.JavacNode;
 import lombok.javac.ResolutionBased;
@@ -40,6 +40,7 @@ import org.mangosdk.spi.ProviderFor;
 
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.util.TreeScanner;
+import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
@@ -112,6 +113,17 @@ public class HandleExtensionMethod extends JavacAnnotationHandler<ExtensionMetho
 			if ((method.flags() & STATIC) != STATIC) continue;
 			if ((method.flags() & PUBLIC) != PUBLIC) continue;
 			if (method.params().isEmpty()) continue;
+			if (method.attributes_field.size() == 0) continue;
+			boolean found = false;
+			for (Compound a : method.attributes_field) {
+				if (lombok.Extension.class.getName().equals(a.type.toString())) {
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) continue;
+			
 			extensionMethods.add(method);
 		}
 		return new Extension(extensionMethods, tsym);
