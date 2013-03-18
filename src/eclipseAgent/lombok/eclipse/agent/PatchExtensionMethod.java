@@ -170,6 +170,16 @@ public class PatchExtensionMethod {
 			if (!method.isStatic()) continue;
 			if (!method.isPublic()) continue;
 			if (method.parameters == null || method.parameters.length == 0) continue;
+			TypeBinding firstArgType = method.parameters[0];
+			if (receiverType.isProvablyDistinct(firstArgType) && !receiverType.isCompatibleWith(firstArgType.erasure())) continue;
+			TypeBinding[] argumentTypes = Arrays.copyOfRange(method.parameters, 1, method.parameters.length);
+			if ((receiverType instanceof ReferenceBinding) && ((ReferenceBinding) receiverType).getExactMethod(method.selector, argumentTypes, cuScope) != null) continue;
+
+			try {
+				if (method.sourceMethod() == null) continue;
+			} catch (NullPointerException e) {
+				continue;
+			}
 			if (method.sourceMethod().annotations == null) continue;
 			if (method.sourceMethod().annotations.length == 0) continue;
 			boolean found = false;
@@ -180,10 +190,6 @@ public class PatchExtensionMethod {
 				}
 			}
 			if (!found) continue;
-			TypeBinding firstArgType = method.parameters[0];
-			if (receiverType.isProvablyDistinct(firstArgType) && !receiverType.isCompatibleWith(firstArgType.erasure())) continue;
-			TypeBinding[] argumentTypes = Arrays.copyOfRange(method.parameters, 1, method.parameters.length);
-			if ((receiverType instanceof ReferenceBinding) && ((ReferenceBinding) receiverType).getExactMethod(method.selector, argumentTypes, cuScope) != null) continue;
 			extensionMethods.add(method);
 		}
 		return extensionMethods;
