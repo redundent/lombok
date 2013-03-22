@@ -1,7 +1,7 @@
-2:18 Not generating setFoo(): A method with that name already exists
-8:103 Not generating setFoo(): A method with that name already exists
-14:187 Not generating setFoo(): A method with that name already exists
-20:271 Not generating setFoo(): A method with that name already exists
-38:517 Not generating setFoo(): A method with that name already exists
-44:613 Not generating setFoo(): A method with that name already exists (setIsFoo)
-50:702 Not generating setFoo(): A method with that name already exists
+2:17 Not generating setFoo(): A method with that name already exists
+8:96 Not generating setFoo(): A method with that name already exists
+14:174 Not generating setFoo(): A method with that name already exists
+20:252 Not generating setFoo(): A method with that name already exists
+38:480 Not generating setFoo(): A method with that name already exists
+44:570 Not generating setFoo(): A method with that name already exists (setIsFoo)
+50:653 Not generating setFoo(): A method with that name already exists
