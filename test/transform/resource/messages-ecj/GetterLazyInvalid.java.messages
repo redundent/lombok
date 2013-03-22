@@ -1,0 +1,6 @@
+2:36 'lazy' requires the field to be private and final.
+6:137 'lazy' requires the field to be private and final.
+10:241 'lazy' requires the field to be private and final.
+14:328 'lazy' does not work with AccessLevel.NONE.
+17:428 'lazy' is not supported for @Getter on a type.
+22:565 'lazy' requires field initialization.

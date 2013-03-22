@@ -1,0 +1,7 @@
+3:33 incompatible types
+4:43 incompatible types
+6:25 incompatible types
+11:25 incompatible types
+14:43 incompatible types
+6:1 'onParam' is not supported for @Setter on a type.
+11:1 'onParam' is not supported for @Setter on a type.
