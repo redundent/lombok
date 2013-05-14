@@ -185,7 +185,7 @@ public class JavacHandlerUtil {
 	public static boolean typeMatches(Class<?> type, JavacNode node, JCTree typeNode) {
 		String typeName = typeNode.toString();
 		
-		TypeResolver resolver = new TypeResolver(node.getPackageDeclaration(), node.getImportStatements());
+		TypeResolver resolver = new TypeResolver(node.getImportList());
 		return resolver.typeMatches(node, type.getName(), typeName);
 	}
 	
@@ -884,7 +884,7 @@ public class JavacHandlerUtil {
 	public static JCExpression chainDots(JavacNode node, Class<?> clazz) {
 		return chainDotsString(node, clazz.getName());
 	}
-	
+
 	/**
 	 * Searches the given field node for annotations and returns each one that matches the provided regular expression pattern.
 	 * 

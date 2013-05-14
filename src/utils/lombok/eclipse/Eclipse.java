@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
  * Copyright (C) 2009-2011 The Project Lombok Authors.
+=======
+ * Copyright (C) 2009-2013 The Project Lombok Authors.
+>>>>>>> f98bf919cc6701e98087d39fefb7bbfc85688834
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +62,9 @@ public class Eclipse {
 	 * but we need to deal with it. This turns [[java][lang][String]] into "java.lang.String".
 	 */
 	public static String toQualifiedName(char[][] typeName) {
-		StringBuilder sb = new StringBuilder();
+		int len = typeName.length - 1;
+		for (char[] c : typeName) len += c.length;
+		StringBuilder sb = new StringBuilder(len);
 		boolean first = true;
 		for (char[] c : typeName) {
 			sb.append(first ? "" : ".").append(c);

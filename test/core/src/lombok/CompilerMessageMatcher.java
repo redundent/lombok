@@ -60,19 +60,10 @@ public class CompilerMessageMatcher {
 	}
 	
 	public boolean matches(CompilerMessage message) {
-		if (message.getLine() != this.line) {
-			System.out.println("message.getLine() != this.line: " + message.getLine() + " : " + this.line);
-			return false;
-		}
-		if (message.getColumnOrPosition() != this.position) {
-			System.out.println("message.getColumnOrPosition() != this.position: " + message.getColumnOrPosition() + " : " + this.position);
-			return false;
-		}
+		if (message.getLine() != this.line) return false;
+		if (message.getColumnOrPosition() != this.position) return false;
 		for (String token : messageParts) {
-			if (!message.getMessage().contains(token)) {
-				System.out.println("message.getMessage().contains(token): " + message.getMessage() + " : " + token);
-				return false;
-			}
+			if (!message.getMessage().contains(token)) return false;
 		}
 		return true;
 	}

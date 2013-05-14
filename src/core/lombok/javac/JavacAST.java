@@ -37,25 +37,24 @@ import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCCatch;
-import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
+import com.sun.tools.javac.tree.JCTree.JCCatch;
 import com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import com.sun.tools.javac.tree.JCTree.JCIdent;
-import com.sun.tools.javac.tree.JCTree.JCImport;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
-import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 
 /**
  * Wraps around javac's internal AST view to add useful features as well as the ability to visit parents from children,
@@ -78,7 +77,7 @@ public class JavacAST extends AST<JavacAST, JavacNode, JCTree> {
 	 * @param top The compilation unit, which serves as the top level node in the tree to be built.
 	 */
 	public JavacAST(Messager messager, Context context, JCCompilationUnit top) {
-		super(sourceName(top), packageDeclaration(top), imports(top));
+		super(sourceName(top), packageDeclaration(top), new JavacImportList(top));
 		setTop(buildCompilationUnit(top));
 		this.context = context;
 		this.messager = messager;
@@ -98,16 +97,6 @@ public class JavacAST extends AST<JavacAST, JavacNode, JCTree> {
 		return (cu.pid instanceof JCFieldAccess || cu.pid instanceof JCIdent) ? cu.pid.toString() : null;
 	}
 	
-	private static Collection<String> imports(JCCompilationUnit cu) {
-		List<String> imports = new ArrayList<String>();
-		for (JCTree def : cu.defs) {
-			if (def instanceof JCImport) {
-				imports.add(((JCImport)def).qualid.toString());
-			}
-		}
-		return imports;
-	}
-	
 	public Context getContext() {
 		return context;
 	}
@@ -121,9 +110,7 @@ public class JavacAST extends AST<JavacAST, JavacNode, JCTree> {
 	}
 	
 	void traverseChildren(JavacASTVisitor visitor, JavacNode node) {
-		for (JavacNode child : new ArrayList<JavacNode>(node.down())) {
-			child.traverse(visitor);
-		}
+		for (JavacNode child : node.down()) child.traverse(visitor);
 	}
 	
 	/** @return A Name object generated for the proper name table belonging to this AST. */

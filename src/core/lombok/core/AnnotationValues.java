@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
  * Copyright (C) 2009-2012 The Project Lombok Authors.
+=======
+ * Copyright (C) 2009-2013 The Project Lombok Authors.
+>>>>>>> f98bf919cc6701e98087d39fefb7bbfc85688834
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.objectweb.asm.tree.ClassNode;
 
 import lombok.core.AST.Kind;
 
@@ -290,11 +296,17 @@ public class AnnotationValues<A extends Annotation> {
 		}
 		
 		if (Class.class == expected) {
-			if (guess instanceof String) try {
-				return Class.forName(toFQ((String)guess));
-			} catch (ClassNotFoundException e) {
-				throw new AnnotationValueDecodeFail(v,
-						"Can't translate " + guess + " to a class object.", pos);
+			if (guess instanceof String) {
+				try {
+					return Class.forName(toFQ((String)guess));
+				} catch (ClassNotFoundException e) {
+					try {
+						return Class.forName("java.lang." + guess);
+					} catch (ClassNotFoundException e2) {
+						throw new AnnotationValueDecodeFail(v,
+								"Can't translate " + guess + " to a class object.", pos);
+					}
+				}
 			}
 		}
 		
@@ -402,7 +414,8 @@ public class AnnotationValues<A extends Annotation> {
 	private String toFQ(String typeName) {
 		String prefix = typeName.indexOf('.') > -1 ? typeName.substring(0, typeName.indexOf('.')) : typeName;
 		
-		/* 1. Walk through type names in this source file at this level. */ {
+		/* 1. Walk through type names in this source file at this level. */
+		{
 			LombokNode<?, ?, ?> n = ast;
 			walkThroughCU:
 			while (n != null) {
@@ -434,24 +447,19 @@ public class AnnotationValues<A extends Annotation> {
 			}
 		}
 		
-		/* 2. Walk through non-star imports and search for a match. */ {
-			for (String im : ast == null ? Collections.<String>emptyList() : ast.getImportStatements()) {
-				if (im.endsWith(".*")) continue;
-				int idx = im.lastIndexOf('.');
-				String simple = idx == -1 ? im : im.substring(idx+1);
-				if (simple.equals(prefix)) {
-					return im + typeName.substring(prefix.length());
-				}
+		/* 2. Walk through non-star imports and search for a match. */
+		{
+			if (prefix.equals(typeName)) {
+				String fqn = ast.getImportList().getFullyQualifiedNameForSimpleName(typeName);
+				if (fqn != null) return fqn;
 			}
 		}
 		
-		/* 3. Walk through star imports and, if they start with "java.", use Class.forName based resolution. */ {
-			List<String> imports = ast == null ? Collections.<String>emptyList() : new ArrayList<String>(ast.getImportStatements());
-			imports.add("java.lang.*");
-			for (String im : imports) {
-				if (!im.endsWith(".*") || !im.startsWith("java.")) continue;
+		/* 3. Walk through star imports and, if they start with "java.", use Class.forName based resolution. */
+		{
+			for (String potential : ast.getImportList().applyNameToStarImports("java", typeName)) {
 				try {
-					Class<?> c = Class.forName(im.substring(0, im.length()-1) + typeName);
+					Class<?> c = Class.forName(potential);
 					if (c != null) return c.getName();
 				} catch (Throwable t) {
 					//Class.forName failed for whatever reason - it most likely does not exist, continue.
@@ -459,11 +467,13 @@ public class AnnotationValues<A extends Annotation> {
 			}
 		}
 		
-		/* 4. If the type name is a simple name, then our last guess is that it's another class in this package. */ {
+		/* 4. If the type name is a simple name, then our last guess is that it's another class in this package. */
+		{
 			if (typeName.indexOf('.') == -1) return inLocalPackage(ast, typeName);
 		}
 		
-		/* 5. It's either an FQN or a nested class in another class in our package. Use code conventions to guess. */ {
+		/* 5. It's either an FQN or a nested class in another class in our package. Use code conventions to guess. */
+		{
 			char firstChar = typeName.charAt(0);
 			if (Character.isTitleCase(firstChar) || Character.isUpperCase(firstChar)) {
 				//Class names start with uppercase letters, so presume it's a nested class in another class in our package.

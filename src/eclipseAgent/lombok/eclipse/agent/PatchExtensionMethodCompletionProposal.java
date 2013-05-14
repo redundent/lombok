@@ -30,9 +30,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import lombok.ExtensionMethod;
 import lombok.eclipse.EclipseNode;
 import lombok.eclipse.agent.PatchExtensionMethod.Extension;
+import lombok.experimental.ExtensionMethod;
 
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
