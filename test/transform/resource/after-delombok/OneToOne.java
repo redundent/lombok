@@ -2,7 +2,7 @@ import lombok.OneToOne;
 
 class Customer {
 	@java.lang.SuppressWarnings("all")
-	public static final lombok.core.data.OneToOneRelation<Customer, Order> PrimaryOrder = new lombok.core.data.OneToOneRelation<Customer, Order>(){
+	public static final lombok.core.data.OneToOneRelation<Customer, Order> PRIMARY_ORDER = new lombok.core.data.OneToOneRelation<Customer, Order>(){
 		
 		
 		@java.lang.Override

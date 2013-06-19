@@ -3,7 +3,7 @@ import lombok.Setter;
 import lombok.OneToOne;
 import lombok.core.data.OneToOneRelation;
 @Getter @Setter class Customer {
-  private static final @java.lang.SuppressWarnings("all") OneToOneRelation<Customer, Order> PrimaryOrder = new OneToOneRelation<Customer, Order>() {
+  private static final @java.lang.SuppressWarnings("all") OneToOneRelation<Customer, Order> PRIMARY_ORDER = new OneToOneRelation<Customer, Order>() {
     x() {
       super();
     }

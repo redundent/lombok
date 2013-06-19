@@ -3,7 +3,7 @@ import java.util.List;
 import lombok.OneToMany;
 class Customer {
 	@java.lang.SuppressWarnings("all")
-	public static final lombok.core.data.OneToManyRelation<Customer, Order> Orders = new lombok.core.data.OneToManyRelation<Customer, Order>(){
+	public static final lombok.core.data.OneToManyRelation<Customer, Order> ORDERS = new lombok.core.data.OneToManyRelation<Customer, Order>(){
 		
 		
 		@java.lang.Override

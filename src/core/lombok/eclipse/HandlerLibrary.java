@@ -263,6 +263,10 @@ public class HandlerLibrary {
 		AnnotationHandlerContainer<?> container = annotationHandlers.get(new String(tb.readableName()));
 		if (container == null) return;
 		EclipseNode annotationNode = typeNode.getAst().get(annotation);
+		if (annotationNode == null) {
+			return;
+		}
+		
 		if (isMethodAnnotation(annotationNode) && !typeNode.isCompleteParse() && (decl.scope != null)) {
 			final CompilationUnitScope cus = decl.scope.compilationUnitScope();
 			final ITypeRequestor typeRequestor = cus.environment().typeRequestor;

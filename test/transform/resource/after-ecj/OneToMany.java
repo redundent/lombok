@@ -4,7 +4,7 @@ import lombok.Setter;
 import lombok.OneToMany;
 import lombok.core.data.OneToManyRelation;
 @Getter @Setter class Customer {
-  private static final @java.lang.SuppressWarnings("all") OneToManyRelation<Customer, Order> Orders = new OneToManyRelation<Customer, Order>() {
+  private static final @java.lang.SuppressWarnings("all") OneToManyRelation<Customer, Order> ORDERS = new OneToManyRelation<Customer, Order>() {
     x() {
       super();
     }

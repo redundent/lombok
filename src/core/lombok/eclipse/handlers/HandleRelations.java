@@ -180,7 +180,7 @@ public class HandleRelations {
 		allocation.sourceStart = pS; allocation.sourceEnd = allocation.statementEnd = pE;
 		allocation.type = fieldType;
 		
-		result = new FieldDeclaration(toProperCase(new String(fieldDecl.name)).toCharArray(), 0, -1);
+		result = new FieldDeclaration(toUpperCase(new String(fieldDecl.name)).toCharArray(), 0, -1);
 		setGeneratedBy(result, source);
 		result.declarationSourceEnd = -1;
 		result.type = fieldType;
@@ -336,6 +336,19 @@ public class HandleRelations {
 		setRelatedId.statements = new Statement[] { setRelatedIdName };
 		
 		return setRelatedId;
+	}
+	
+	private static String toUpperCase(String name) {
+		StringBuilder sb = new StringBuilder();
+		for (char c : name.toCharArray()) {
+			if (Character.isUpperCase(c)) {
+				sb.append("_");
+			}
+			
+			sb.append(Character.toUpperCase(c));
+		}
+		
+		return sb.toString();
 	}
 	
 	private static String toProperCase(String name) {

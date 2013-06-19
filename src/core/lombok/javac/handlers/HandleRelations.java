@@ -97,7 +97,7 @@ public class HandleRelations {
 			return;
 		}
 		
-		if (fieldExists(toProperCase(field.name.toString()), fieldNode) == MemberExistsResult.NOT_EXISTS) {
+		if (fieldExists(toUpperCase(field.name.toString()), fieldNode) == MemberExistsResult.NOT_EXISTS) {
 			JCVariableDecl fieldDecl = createField(anno, fieldNode);
 			injectFieldSuppressWarnings(fieldNode.up(), fieldDecl);
 		}
@@ -138,7 +138,7 @@ public class HandleRelations {
 		
 		JCVariableDecl var = maker.VarDef(
 				maker.Modifiers(Flags.PUBLIC | Flags.STATIC | Flags.FINAL),
-				fieldNode.toName(toProperCase(field.name.toString())),
+				fieldNode.toName(toUpperCase(field.name.toString())),
 				maker.TypeApply(
 						(isOneToOne ? chainDots(fieldNode, OneToOneRelation.class) : chainDots(fieldNode, OneToManyRelation.class)),
 						List.<JCExpression>of(baseType, referenceType)
@@ -317,6 +317,19 @@ public class HandleRelations {
 				),
 				null
 		);
+	}
+
+	private static String toUpperCase(String name) {
+		StringBuilder sb = new StringBuilder();
+		for (char c : name.toCharArray()) {
+			if (Character.isUpperCase(c)) {
+				sb.append("_");
+			}
+			
+			sb.append(Character.toUpperCase(c));
+		}
+		
+		return sb.toString();
 	}
 	
 	private static String toProperCase(String name) {
