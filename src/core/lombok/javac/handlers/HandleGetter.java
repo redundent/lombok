@@ -24,6 +24,7 @@ package lombok.javac.handlers;
 import static lombok.javac.Javac.*;
 import static lombok.javac.handlers.JavacHandlerUtil.*;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+import com.sun.tools.javac.tree.JCTree.JCConditional;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCIf;
@@ -282,7 +284,43 @@ public class HandleGetter extends JavacAnnotationHandler<Getter> {
 	}
 	
 	private List<JCStatement> createSimpleGetterBody(TreeMaker treeMaker, JavacNode field) {
-		return List.<JCStatement>of(treeMaker.Return(createFieldAccessor(treeMaker, field, FieldAccess.ALWAYS_FIELD)));
+		JCVariableDecl fieldDecl = (JCVariableDecl) field.get();
+		JCExpression fieldRef = createFieldAccessor(treeMaker, field, FieldAccess.ALWAYS_FIELD);
+	
+		JCStatement returnExpression = null;
+		
+		String varTypeString = fieldDecl.vartype.toString();
+		boolean isMutable = false;
+		boolean isTypeCastNeeded = false;
+		if (Timestamp.class.getSimpleName().equals(varTypeString) || Timestamp.class.getName().equals(varTypeString)) {
+			isMutable = true;
+			isTypeCastNeeded = true;
+		} else if (varTypeString.endsWith("[]")) {
+			isMutable = true;
+		}
+		
+		if (isMutable) {
+			JCExpression nullCheck = treeMaker.Binary(CTC_EQUAL, fieldRef, treeMaker.Literal(CTC_BOT, null));
+			JCExpression callClone = treeMaker.Apply(List.<JCExpression>nil(), treeMaker.Select(fieldRef, field.toName("clone")), List.<JCExpression>nil());					
+			if (isTypeCastNeeded) {
+				callClone = treeMaker.TypeCast(
+						fieldDecl.vartype,
+						callClone
+				);
+			}
+			
+			JCConditional conditional = treeMaker.Conditional(
+					nullCheck, 
+					treeMaker.Literal(CTC_BOT, null), 
+					callClone
+			);
+			
+			returnExpression = treeMaker.Return(conditional);
+		} else {
+			returnExpression = treeMaker.Return(fieldRef);
+		}
+		
+		return List.<JCStatement>of(returnExpression);
 	}
 	
 	private static final String AR = "java.util.concurrent.atomic.AtomicReference";
@@ -302,22 +340,7 @@ public class HandleGetter extends JavacAnnotationHandler<Getter> {
 		TYPE_MAP = Collections.unmodifiableMap(m);
 	}
 	
-	private List<JCStatement> createLazyGetterBody(TreeMaker maker, JavacNode fieldNode, JCTree source) {
-		/*
-		java.util.concurrent.atomic.AtomicReference<ValueType> value = this.fieldName.get();
-		if (value == null) {
-			synchronized (this.fieldName) {
-				value = this.fieldName.get();
-				if (value == null) { 
-					final ValueType actualValue = new ValueType();
-					value = new java.util.concurrent.atomic.AtomicReference<ValueType>(actualValue);
-					this.fieldName.set(value);
-				}
-			}
-		}
-		return value.get();
-		*/
-		
+	private List<JCStatement> createLazyGetterBody(TreeMaker maker, JavacNode fieldNode, JCTree source) {	
 		ListBuffer<JCStatement> statements = ListBuffer.lb();
 		
 		JCVariableDecl field = (JCVariableDecl) fieldNode.get();

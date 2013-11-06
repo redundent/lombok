@@ -12,7 +12,7 @@ class Customer {
 		
 		@java.lang.Override
 		public void setReferencedObject(final Customer item, final java.util.List<Order> ref) {
-			if (ref.size() > 0) item.primaryOrder = ref.get(0);
+			item.primaryOrder = this.firstOrDefault(ref);
 		}
 		
 		@java.lang.Override

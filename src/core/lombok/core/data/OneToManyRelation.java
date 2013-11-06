@@ -16,6 +16,10 @@ public abstract class OneToManyRelation<T, K> implements ReferencedBy<K> {
 	public abstract void setReferencedObject(T base, List<K> ref);
 	
 	protected final <V> V firstOrDefault(Iterable<V> items) {
+		if (items == null) {
+			return null;
+		}
+		
 		Iterator<V> i = items.iterator();
 		return (i.hasNext() ? i.next() : null);
 	}

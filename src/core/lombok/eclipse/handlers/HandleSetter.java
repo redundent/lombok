@@ -25,6 +25,7 @@ import static lombok.eclipse.Eclipse.*;
 import static lombok.eclipse.handlers.EclipseHandlerUtil.*;
 
 import java.lang.reflect.Modifier;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,10 +44,16 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.Assignment;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
+import org.eclipse.jdt.internal.compiler.ast.ConditionalExpression;
+import org.eclipse.jdt.internal.compiler.ast.EqualExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NameReference;
+import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
+import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
@@ -225,7 +232,55 @@ public class HandleSetter extends EclipseAnnotationHandler<Setter> {
 		method.bits |= ECLIPSE_DO_NOT_TOUCH_FLAG;
 		Expression fieldRef = createFieldAccessor(fieldNode, FieldAccess.ALWAYS_FIELD, source);
 		NameReference fieldNameRef = new SingleNameReference(field.name, p);
-		Assignment assignment = new Assignment(fieldRef, fieldNameRef, (int)p);
+		setGeneratedBy(fieldNameRef, source);
+		fieldNameRef.sourceStart = pS; fieldNameRef.sourceEnd = fieldNameRef.statementEnd = pE;
+		Assignment assignment = null;
+		
+		String varTypeString = field.type.toString();
+		boolean isMutable = false;
+		boolean isTypeCastNeeded = false;
+		if (Timestamp.class.getSimpleName().equals(varTypeString) || Timestamp.class.getName().equals(varTypeString)) {
+			isMutable = true;
+			isTypeCastNeeded = true;
+		} else if (varTypeString.endsWith("[]")) {
+			isMutable = true;
+		}
+		
+		if (isMutable) {
+			NullLiteral nullLiteral = new NullLiteral(pS, pE);
+			setGeneratedBy(nullLiteral, source);
+			EqualExpression nullCheck = new EqualExpression(fieldNameRef, nullLiteral, OperatorIds.EQUAL_EQUAL);
+			nullCheck.sourceStart = pS; nullCheck.sourceEnd = nullCheck.statementEnd = pE;
+			setGeneratedBy(nullCheck, source);
+			
+			Expression expression = null;
+			
+			MessageSend callClone = new MessageSend();
+			setGeneratedBy(callClone, source);
+			callClone.sourceStart = pS; callClone.sourceEnd = callClone.statementEnd = pE;
+			callClone.receiver = new SingleNameReference(field.name, p);
+			setGeneratedBy(callClone.receiver, source);
+			callClone.receiver.sourceStart = pS; callClone.receiver.sourceEnd = callClone.receiver.statementEnd = pE;
+			callClone.selector = "clone".toCharArray();
+			
+			if (isTypeCastNeeded) {
+				expression = new CastExpression(callClone, field.type);
+			} else {
+				expression = callClone;
+			}
+			
+			setGeneratedBy(expression, source);
+			expression.sourceStart = pS; expression.sourceEnd = expression.statementEnd = pE;
+			
+			ConditionalExpression conditional = new ConditionalExpression(nullCheck, nullLiteral, expression);
+			setGeneratedBy(conditional, source);
+			conditional.sourceStart = pS; conditional.sourceEnd = conditional.statementEnd = pE;
+
+			assignment = new Assignment(fieldRef, conditional, (int)p);
+		} else {
+			assignment = new Assignment(fieldRef, fieldNameRef, (int)p);
+		}
+		
 		assignment.sourceStart = pS; assignment.sourceEnd = assignment.statementEnd = pE;
 		method.bodyStart = method.declarationSourceStart = method.sourceStart = source.sourceStart;
 		method.bodyEnd = method.declarationSourceEnd = method.sourceEnd = source.sourceEnd;

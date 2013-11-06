@@ -24,6 +24,7 @@ package lombok.javac.handlers;
 import static lombok.javac.Javac.*;
 import static lombok.javac.handlers.JavacHandlerUtil.*;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 
 import javax.lang.model.type.NoType;
@@ -48,6 +49,7 @@ import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+import com.sun.tools.javac.tree.JCTree.JCConditional;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCReturn;
@@ -202,7 +204,38 @@ public class HandleSetter extends JavacAnnotationHandler<Setter> {
 		JCVariableDecl fieldDecl = (JCVariableDecl) field.get();
 		
 		JCExpression fieldRef = createFieldAccessor(treeMaker, field, FieldAccess.ALWAYS_FIELD);
-		JCAssign assign = treeMaker.Assign(fieldRef, treeMaker.Ident(fieldDecl.name));
+		
+		JCAssign assign = null;
+		String varTypeString = fieldDecl.vartype.toString();
+		boolean isMutable = false;
+		boolean isTypeCastNeeded = false;
+		if (Timestamp.class.getSimpleName().equals(varTypeString) || Timestamp.class.getName().equals(varTypeString)) {
+			isMutable = true;
+			isTypeCastNeeded = true;
+		} else if (varTypeString.endsWith("[]")) {
+			isMutable = true;
+		}
+		
+		if (isMutable) {
+			JCExpression nullCheck = treeMaker.Binary(CTC_EQUAL, treeMaker.Ident(fieldDecl.name), treeMaker.Literal(CTC_BOT, null));
+			JCExpression callClone = treeMaker.Apply(List.<JCExpression>nil(), treeMaker.Select(treeMaker.Ident(fieldDecl.name), field.toName("clone")), List.<JCExpression>nil());					
+			if (isTypeCastNeeded) {
+				callClone = treeMaker.TypeCast(
+						fieldDecl.vartype,
+						callClone
+				);
+			}
+			
+			JCConditional conditional = treeMaker.Conditional(
+					nullCheck, 
+					treeMaker.Literal(CTC_BOT, null), 
+					callClone
+			);
+							
+			assign = treeMaker.Assign(fieldRef, conditional);
+		} else {
+			assign = treeMaker.Assign(fieldRef, treeMaker.Ident(fieldDecl.name));
+		}
 		
 		ListBuffer<JCStatement> statements = ListBuffer.lb();
 		List<JCAnnotation> nonNulls = findAnnotations(field, TransformationsUtil.NON_NULL_PATTERN);

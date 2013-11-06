@@ -211,38 +211,23 @@ public class HandleRelations {
 		
 		JCStatement statement = null;
 		if (isUnique) {
-			statement = maker.If(
-					maker.Binary(
-							getCtcInt(JCTree.class, "GT"),
+			statement = maker.Exec(
+					maker.Assign(
+							maker.Select(
+									maker.Ident(fieldNode.toName("item")),
+									field.name
+							),
 							maker.Apply(
 									List.<JCExpression>nil(),
 									maker.Select(
-											maker.Ident(fieldNode.toName("ref")),
-											fieldNode.toName("size")
+											maker.Ident(fieldNode.toName("this")),
+											fieldNode.toName("firstOrDefault")
 									),
-									List.<JCExpression>nil()
-							),
-							maker.Literal(getCtcInt(TypeTags.class, "INT"), 0)
-					),
-					maker.Exec(
-							maker.Assign(
-									maker.Select(
-											maker.Ident(fieldNode.toName("item")),
-											field.name
-									),
-									maker.Apply(
-											List.<JCExpression>nil(),
-											maker.Select(
-													maker.Ident(fieldNode.toName("ref")),
-													fieldNode.toName("get")						
-											),
-											List.<JCExpression>of(
-													maker.Literal(getCtcInt(TypeTags.class, "INT"), 0)
-											)
+									List.<JCExpression>of(
+											maker.Ident(fieldNode.toName("ref"))
 									)
 							)
-					),
-					null
+					)
 			);
 		} else {
 			statement = maker.Exec(

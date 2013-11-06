@@ -24,6 +24,7 @@ package lombok.eclipse.handlers;
 import static lombok.eclipse.Eclipse.*;
 import static lombok.eclipse.handlers.EclipseHandlerUtil.*;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +50,8 @@ import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Assignment;
 import org.eclipse.jdt.internal.compiler.ast.BinaryExpression;
 import org.eclipse.jdt.internal.compiler.ast.Block;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
+import org.eclipse.jdt.internal.compiler.ast.ConditionalExpression;
 import org.eclipse.jdt.internal.compiler.ast.EqualExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -57,6 +60,7 @@ import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
+import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
@@ -281,7 +285,55 @@ public class HandleGetter extends EclipseAnnotationHandler<Getter> {
 	private Statement[] createSimpleGetterBody(ASTNode source, EclipseNode fieldNode) {
 		FieldDeclaration field = (FieldDeclaration) fieldNode.get();
 		Expression fieldRef = createFieldAccessor(fieldNode, FieldAccess.ALWAYS_FIELD, source);
-		Statement returnStatement = new ReturnStatement(fieldRef, field.sourceStart, field.sourceEnd);
+		
+		int pS = field.sourceStart, pE = field.sourceEnd;
+		long p = (long)pS << 32 | pE;
+		
+		Statement returnStatement = null;
+		
+		String varTypeString = field.type.toString();
+		boolean isMutable = false;
+		boolean isTypeCastNeeded = false;
+		if (Timestamp.class.getSimpleName().equals(varTypeString) || Timestamp.class.getName().equals(varTypeString)) {
+			isMutable = true;
+			isTypeCastNeeded = true;
+		} else if (varTypeString.endsWith("[]")) {
+			isMutable = true;
+		}
+		
+		if (isMutable) {
+			NullLiteral nullLiteral = new NullLiteral(pS, pE);
+			setGeneratedBy(nullLiteral, source);
+			EqualExpression nullCheck = new EqualExpression(fieldRef, nullLiteral, OperatorIds.EQUAL_EQUAL);
+			nullCheck.sourceStart = pS; nullCheck.sourceEnd = nullCheck.statementEnd = pE;
+			setGeneratedBy(nullCheck, source);
+			
+			Expression expression = null;
+			
+			MessageSend callClone = new MessageSend();
+			setGeneratedBy(callClone, source);
+			callClone.sourceStart = pS; callClone.sourceEnd = callClone.statementEnd = pE;
+			callClone.receiver = createFieldAccessor(fieldNode, FieldAccess.ALWAYS_FIELD, source);
+			callClone.selector = "clone".toCharArray();
+			
+			if (isTypeCastNeeded) {
+				expression = new CastExpression(callClone, field.type);
+			} else {
+				expression = callClone;
+			}
+			
+			setGeneratedBy(expression, source);
+			expression.sourceStart = pS; expression.sourceEnd = expression.statementEnd = pE;
+			
+			ConditionalExpression conditional = new ConditionalExpression(nullCheck, nullLiteral, expression);
+			setGeneratedBy(conditional, source);
+			conditional.sourceStart = pS; conditional.sourceEnd = conditional.statementEnd = pE;
+
+			returnStatement = new ReturnStatement(conditional, pS, pE);
+		} else {
+			returnStatement = new ReturnStatement(fieldRef, field.sourceStart, field.sourceEnd);
+		}
+		
 		return new Statement[] {returnStatement};
 	}
 	
